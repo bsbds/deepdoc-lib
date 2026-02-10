@@ -2,46 +2,83 @@
 
 ### Installations
 
-- pip
+``` bassh
+pip install deepdoc-lib
+```
 
-    ``` bassh
-    pip install git+https://github.com/HuangPuStar/deepdoc-lib.git
-    ```
+### Model Artifact Configuration
 
-- pyproject
+DeepDoc resolves runtime artifacts from either a local model directory or ModelScope.
 
-    Add the following to pyproject.toml
+```bash
+# provider: auto | local | modelscope
+export DEEPDOC_MODEL_PROVIDER=auto
 
-    ```toml
-    dependencies = [
-        # ... 
-        "deepdoc @ git+https://github.com/HuangPuStar/deepdoc-lib.git"
-    ]
-    ```
+# shared model cache root (default: ~/.cache/deepdoc)
+export DEEPDOC_MODEL_HOME=/path/to/deepdoc-models
 
-    And if you use uv
+# optional bundle-specific local directories
+export DEEPDOC_VISION_MODEL_DIR=/path/to/vision
+export DEEPDOC_XGB_MODEL_DIR=/path/to/xgb
 
-    ``` sh
-    uv sync
-    ```
+# single combined ModelScope repo (all bundles in one repo)
+# (default: Xorbits/deepdoc)
+export DEEPDOC_MODELSCOPE_REPO=Xorbits/deepdoc
+# optional shared revision (default: master)
+export DEEPDOC_MODELSCOPE_REVISION=master
+
+# offline mode for tokenizer NLTK auto-download
+export DEEPDOC_OFFLINE=0
+
+# optional NLTK data controls for tokenizer
+export DEEPDOC_NLTK_DATA_DIR=/path/to/nltk_data
+```
 
 ### Parser Usage
 
 ```python
-from deepdoc import PdfParser, DocxParser, ExcelParser
+from deepdoc import (
+    DocxParser,
+    ExcelParser,
+    HtmlParser,
+    PdfModelConfig,
+    PdfParser,
+    TokenizerConfig,
+)
 
-# 解析 PDF
-pdf_parser = PdfParser()
+# Build explicit configs (no hidden kwargs/env wiring in parser constructors)
+tokenizer_cfg = TokenizerConfig(
+    dict_path="/path/to/models/tokenizer/huqie.txt",
+    offline=True,
+    nltk_data_dir="/path/to/nltk_data",
+)
+pdf_model_cfg = PdfModelConfig(
+    vision_model_dir="/path/to/models/vision",
+    xgb_model_dir="/path/to/models/xgb",
+    model_provider="local",
+)
+
+
+# Parse PDF
+pdf_parser = PdfParser(model_cfg=pdf_model_cfg, tokenizer_cfg=tokenizer_cfg)
 result = pdf_parser("document.pdf")
 
-# 解析 Word
-docx_parser = DocxParser()
-result = docx_parser("document.docx")
+# Parse DOCX / HTML (tokenizer only)
+docx_parser = DocxParser(tokenizer_cfg=tokenizer_cfg)
+html_parser = HtmlParser(tokenizer_cfg=tokenizer_cfg)
 
-# 解析 Excel
+# Parse Excel (no model/tokenizer dependency)
 excel_parser = ExcelParser()
 with open("data.xlsx", "rb") as f:
     result = excel_parser(f.read())
+```
+
+Or use explicit env factories:
+
+```python
+tokenizer_cfg = TokenizerConfig.from_env()
+pdf_model_cfg = PdfModelConfig.from_env()
+pdf_parser = PdfParser(model_cfg=pdf_model_cfg, tokenizer_cfg=tokenizer_cfg)
 ```
 
 
@@ -103,4 +140,3 @@ vision_model = create_vision_model("/path/to/deepdoc_config.yaml")
 with open("image.jpg", "rb") as f:
     result = vision_model.describe_with_prompt(f.read())
 ```
-

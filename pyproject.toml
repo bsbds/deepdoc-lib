@@ -47,7 +47,7 @@ dependencies = [
     "hanziconv==0.3.2",
     "html-text==0.6.2",
     "httpx[socks]==0.27.2",
-    "huggingface-hub>=0.25.0,<0.26.0",
+    "modelscope>=1.20.0,<2.0.0",
     "infinity-emb>=0.0.66,<0.0.67",
     "itsdangerous==2.1.2",
     "json-repair==0.35.0",
@@ -159,6 +159,9 @@ test = [
 [tool.setuptools]
 packages = {find = {}}
 include-package-data = true
+
+[tool.setuptools.package-data]
+deepdoc = ["dict/huqie.txt"]
 
 [tool.ruff]
 line-length = 200
